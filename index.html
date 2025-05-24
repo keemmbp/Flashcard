@@ -70,13 +70,13 @@
             outline: none;
             cursor: pointer;
             font-size: 1rem;
-            min-width: 0;      /* เพิ่มบรรทัดนี้ */
+            min-width: 0;
             min-height: 44px;
-            width: 100%;       /* เพิ่มบรรทัดนี้ */
+            width: 100%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-sizing: border-box; /* เพิ่มบรรทัดนี้ */
+            box-sizing: border-box;
         }
         .btn:active {
             transform: scale(0.97);
@@ -117,38 +117,21 @@
             display: flex;
             justify-content: center;
             margin-bottom: 2rem;
-            width: 100%;           /* เพิ่มบรรทัดนี้ */
-            max-width: 380px;      /* เพิ่มบรรทัดนี้ */
-            margin-left: auto;     /* เพิ่มบรรทัดนี้ */
-            margin-right: auto;    /* เพิ่มบรรทัดนี้ */
+            width: 100%;
+            max-width: 380px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .shuffle-row button {
             width: 100%;
-            max-width: 100%;       /* แก้ไขจาก 380px เป็น 100% */
+            max-width: 100%;
         }
         @media (max-width: 768px) {
-            .flashcard-container {
-                height: 300px;
-            }
-            .flashcard-face {
-                font-size: 1.1rem;
-                padding: 1rem;
-            }
-            .btn {
-                padding: 0.75rem 0;
-                font-size: 1rem;
-                min-width: 0;      /* เพิ่มบรรทัดนี้ */
-                min-height: 40px;
-                width: 100%;       /* เพิ่มบรรทัดนี้ */
-            }
-            .button-grid {
-                max-width: 100%;
-                gap: 0.5rem;
-                grid-template-columns: repeat(3, 1fr); /* คงไว้ */
-            }
-            .status-text {
-                font-size: 1rem;
-            }
+            .flashcard-container { height: 300px; }
+            .flashcard-face { font-size: 1.1rem; padding: 1rem; }
+            .btn { padding: 0.75rem 0; font-size: 1rem; min-width: 0; min-height: 40px; width: 100%; }
+            .button-grid { max-width: 100%; gap: 0.5rem; grid-template-columns: repeat(3, 1fr); }
+            .status-text { font-size: 1rem; }
         }
     </style>
 </head>
@@ -168,14 +151,12 @@
         </div>
     </div>
 
-    <!-- ปุ่มควบคุมแบบ grid -->
     <div class="button-grid">
         <button id="prev-btn" class="btn btn-secondary">ก่อนหน้า</button>
         <button id="flip-btn" class="btn btn-primary">พลิก</button>
         <button id="next-btn" class="btn btn-secondary">ถัดไป</button>
     </div>
 
-    <!-- ปุ่ม shuffle แยกแถว -->
     <div class="shuffle-row">
         <button id="shuffle-btn" class="btn btn-primary">สลับการ์ด</button>
     </div>
@@ -183,7 +164,6 @@
     <p id="status-text" class="status-text"></p>
 
     <script>
-        // ข้อมูล Flashcard แบบ Hardcode
         const flashcardsData = [
             { question: "อารยธรรมกรีกโบราณเริ่มต้นขึ้นที่ใด?", answer: "คาบสมุทรบอลข่าน, หมู่เกาะในทะเลอีเจียน และชายฝั่งเอเชียไมเนอร์" },
             { question: "อารยธรรมสำคัญ 2 แห่งที่มาก่อนอารยธรรมกรีกบนเกาะครีตและในดินแดนกรีกคืออะไร?", answer: "อารยธรรมมิโนอัน (เกาะครีต) และอารยธรรมไมซีเนียน (กรีกแผ่นดินใหญ่)" },
@@ -217,82 +197,93 @@
             { question: "อ่างอาบน้ำสาธารณะและสถานที่ออกกำลังกายในนครรัฐกรีกเรียกว่าอะไร?", answer: "ยิมเนเซียม (Gymnasium)" }
         ];
 
-        let currentCardIndex = 0;
-        let isFlipped = false;
+        const FlashcardApp = {
+            data: flashcardsData,
+            shuffledIndexes: [],
+            currentPos: 0,
+            isFlipped: false,
 
-        // เพิ่มตัวแปรสำหรับลำดับสุ่ม
-        let shuffledIndexes = [];
-        let currentShuffledPos = 0;
+            init() {
+                this.cacheElements();
+                this.bindEvents();
+                this.shuffle();
+                this.showCard(0);
+            },
 
-        const flashcardElement = document.getElementById('flashcard');
-        const questionTextElement = document.getElementById('question-text');
-        const answerTextElement = document.getElementById('answer-text');
-        const prevBtn = document.getElementById('prev-btn');
-        const flipBtn = document.getElementById('flip-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const shuffleBtn = document.getElementById('shuffle-btn');
-        const statusTextElement = document.getElementById('status-text');
+            cacheElements() {
+                this.flashcard = document.getElementById('flashcard');
+                this.questionText = document.getElementById('question-text');
+                this.answerText = document.getElementById('answer-text');
+                this.prevBtn = document.getElementById('prev-btn');
+                this.flipBtn = document.getElementById('flip-btn');
+                this.nextBtn = document.getElementById('next-btn');
+                this.shuffleBtn = document.getElementById('shuffle-btn');
+                this.statusText = document.getElementById('status-text');
+            },
 
-        function shuffleIndexes() {
-            // ฟังก์ชันสุ่ม Fisher-Yates
-            shuffledIndexes = Array.from({length: flashcardsData.length}, (_, i) => i);
-            for (let i = shuffledIndexes.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffledIndexes[i], shuffledIndexes[j]] = [shuffledIndexes[j], shuffledIndexes[i]];
-            }
-            currentShuffledPos = 0;
-        }
+            bindEvents() {
+                this.flipBtn.addEventListener('click', () => this.flip());
+                this.nextBtn.addEventListener('click', () => this.next());
+                this.prevBtn.addEventListener('click', () => this.prev());
+                this.shuffleBtn.addEventListener('click', () => this.shuffleAndShowFirst());
+            },
 
-        // ปรับ displayCard ให้รับ index ของ shuffledIndexes
-        function displayCard(pos) {
-            if (shuffledIndexes.length === 0) shuffleIndexes();
-            if (pos >= 0 && pos < shuffledIndexes.length) {
-                currentShuffledPos = pos;
-                const cardIndex = shuffledIndexes[currentShuffledPos];
-                questionTextElement.textContent = flashcardsData[cardIndex].question;
-                answerTextElement.textContent = flashcardsData[cardIndex].answer;
-                if (isFlipped) {
-                    flashcardElement.classList.remove('flipped');
-                    isFlipped = false;
+            shuffle() {
+                this.shuffledIndexes = Array.from({ length: this.data.length }, (_, i) => i);
+                for (let i = this.shuffledIndexes.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.shuffledIndexes[i], this.shuffledIndexes[j]] = [this.shuffledIndexes[j], this.shuffledIndexes[i]];
                 }
-                updateStatusText();
-            } else {
-                console.error("ตำแหน่งการ์ดสุ่มไม่ถูกต้อง:", pos);
-            }
-        }
+                this.currentPos = 0;
+            },
 
-        function flipCard() {
-            flashcardElement.classList.toggle('flipped');
-            isFlipped = !isFlipped;
-        }
-        function nextCard() {
-            currentShuffledPos = (currentShuffledPos + 1) % shuffledIndexes.length;
-            displayCard(currentShuffledPos);
-        }
-        function prevCard() {
-            currentShuffledPos = (currentShuffledPos - 1 + shuffledIndexes.length) % shuffledIndexes.length;
-            displayCard(currentShuffledPos);
-        }
-        function shuffleCards() {
-            shuffleIndexes();
-            displayCard(0);
-        }
-        function updateStatusText() {
-            statusTextElement.textContent = `การ์ดที่ ${currentShuffledPos + 1} / ${flashcardsData.length}`;
-        }
-        flipBtn.addEventListener('click', flipCard);
-        nextBtn.addEventListener('click', nextCard);
-        prevBtn.addEventListener('click', prevCard);
-        shuffleBtn.addEventListener('click', shuffleCards);
+            showCard(pos) {
+                if (this.shuffledIndexes.length === 0) this.shuffle();
+                if (pos >= 0 && pos < this.shuffledIndexes.length) {
+                    this.currentPos = pos;
+                    const cardIndex = this.shuffledIndexes[this.currentPos];
+                    this.questionText.textContent = this.data[cardIndex].question;
+                    this.answerText.textContent = this.data[cardIndex].answer;
+                    if (this.isFlipped) this.unflip();
+                    this.updateStatus();
+                }
+            },
+
+            flip() {
+                this.flashcard.classList.toggle('flipped');
+                this.isFlipped = !this.isFlipped;
+            },
+
+            unflip() {
+                this.flashcard.classList.remove('flipped');
+                this.isFlipped = false;
+            },
+
+            next() {
+                this.showCard((this.currentPos + 1) % this.shuffledIndexes.length);
+            },
+
+            prev() {
+                this.showCard((this.currentPos - 1 + this.shuffledIndexes.length) % this.shuffledIndexes.length);
+            },
+
+            shuffleAndShowFirst() {
+                this.shuffle();
+                this.showCard(0);
+            },
+
+            updateStatus() {
+                this.statusText.textContent = `การ์ดที่ ${this.currentPos + 1} / ${this.data.length}`;
+            }
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             if (flashcardsData.length > 0) {
-                shuffleIndexes();
-                displayCard(0);
+                FlashcardApp.init();
             } else {
-                questionTextElement.textContent = "ไม่มี Flashcard ให้แสดง";
-                answerTextElement.textContent = "โปรดเพิ่มข้อมูล Flashcard";
-                statusTextElement.textContent = "0/0";
+                document.getElementById('question-text').textContent = "ไม่มี Flashcard ให้แสดง";
+                document.getElementById('answer-text').textContent = "โปรดเพิ่มข้อมูล Flashcard";
+                document.getElementById('status-text').textContent = "0/0";
             }
         });
     </script>
