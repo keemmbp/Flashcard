@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>อารยธรรมกรีกโบราณ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
+        }
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+            margin: 0 auto;
+        }
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(.4,2,.6,1);
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            box-shadow: 0 10px 24px -4px rgba(71,85,105,0.12), 0 4px 12px -2px rgba(71,85,105,0.08);
+            text-align: center;
+            font-size: 1.5rem;
+            line-height: 1.8;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            pointer-events: none;
+        }
+        .flashcard-front {
+            background: linear-gradient(120deg, #f8fafc 60%, #e0e7ff 100%);
+            color: #1e293b;
+            border: 2px solid #a5b4fc;
+        }
+        .flashcard-back {
+            background: linear-gradient(120deg, #6366f1 60%, #334155 100%);
+            color: #fff;
+            transform: rotateY(180deg);
+            border: 2px solid #6366f1;
+        }
+        .btn {
+            padding: 0.75rem 0;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(.4,2,.6,1);
+            transform: scale(1);
+            box-shadow: 0 2px 8px rgba(71,85,105,0.08);
+            border: none;
+            outline: none;
+            cursor: pointer;
+            font-size: 1rem;
+            min-width: 0;      /* เพิ่มบรรทัดนี้ */
+            min-height: 44px;
+            width: 100%;       /* เพิ่มบรรทัดนี้ */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box; /* เพิ่มบรรทัดนี้ */
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #6366f1 60%, #2563eb 100%);
+            color: #fff;
+            border: 1.5px solid #6366f1;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #4f46e5 60%, #1e40af 100%);
+            border-color: #4f46e5;
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1.5px solid #cbd5e1;
+        }
+        .btn-secondary:hover {
+            background: #e0e7ef;
+            border-color: #a5b4fc;
+            color: #6366f1;
+        }
+        .status-text {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #334155;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: 100%;
+            max-width: 380px;
+            margin: 0 auto 1.5rem auto;
+        }
+        .shuffle-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            width: 100%;           /* เพิ่มบรรทัดนี้ */
+            max-width: 380px;      /* เพิ่มบรรทัดนี้ */
+            margin-left: auto;     /* เพิ่มบรรทัดนี้ */
+            margin-right: auto;    /* เพิ่มบรรทัดนี้ */
+        }
+        .shuffle-row button {
+            width: 100%;
+            max-width: 100%;       /* แก้ไขจาก 380px เป็น 100% */
+        }
+        @media (max-width: 768px) {
+            .flashcard-container {
+                height: 300px;
+            }
+            .flashcard-face {
+                font-size: 1.1rem;
+                padding: 1rem;
+            }
+            .btn {
+                padding: 0.75rem 0;
+                font-size: 1rem;
+                min-width: 0;      /* เพิ่มบรรทัดนี้ */
+                min-height: 40px;
+                width: 100%;       /* เพิ่มบรรทัดนี้ */
+            }
+            .button-grid {
+                max-width: 100%;
+                gap: 0.5rem;
+                grid-template-columns: repeat(3, 1fr); /* คงไว้ */
+            }
+            .status-text {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+    <h1 class="text-4xl font-extrabold text-indigo-700 mb-8 text-center drop-shadow-md">
+        อารยธรรมกรีกโบราณ
+    </h1>
+
+    <div class="flashcard-container mb-8">
+        <div id="flashcard" class="flashcard">
+            <div id="flashcard-front" class="flashcard-face flashcard-front">
+                <p id="question-text"></p>
+            </div>
+            <div id="flashcard-back" class="flashcard-face flashcard-back">
+                <p id="answer-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ปุ่มควบคุมแบบ grid -->
+    <div class="button-grid">
+        <button id="prev-btn" class="btn btn-secondary">ก่อนหน้า</button>
+        <button id="flip-btn" class="btn btn-primary">พลิก</button>
+        <button id="next-btn" class="btn btn-secondary">ถัดไป</button>
+    </div>
+
+    <!-- ปุ่ม shuffle แยกแถว -->
+    <div class="shuffle-row">
+        <button id="shuffle-btn" class="btn btn-primary">สลับการ์ด</button>
+    </div>
+
+    <p id="status-text" class="status-text"></p>
+
+    <script>
+        // ข้อมูล Flashcard แบบ Hardcode
+        const flashcardsData = [
+            { question: "อารยธรรมกรีกโบราณเริ่มต้นขึ้นที่ใด?", answer: "คาบสมุทรบอลข่าน, หมู่เกาะในทะเลอีเจียน และชายฝั่งเอเชียไมเนอร์" },
+            { question: "อารยธรรมสำคัญ 2 แห่งที่มาก่อนอารยธรรมกรีกบนเกาะครีตและในดินแดนกรีกคืออะไร?", answer: "อารยธรรมมิโนอัน (เกาะครีต) และอารยธรรมไมซีเนียน (กรีกแผ่นดินใหญ่)" },
+            { question: "ยุคมืดของกรีก (Dark Ages) คือช่วงเวลาใด?", answer: "ช่วงเวลาที่อารยธรรมกรีกตกต่ำลงหลังจากอารยธรรมไมซีเนียนล่มสลาย (ประมาณ 1100 – 800 ปีก่อนคริสตกาล)" },
+            { question: '"โปลิส" (Polis) หมายถึงอะไรในบริบทของอารยธรรมกรีก?', answer: "นครรัฐอิสระที่มีการปกครองตนเอง" },
+            { question: "นครรัฐที่เน้นการทหารและสังคมแบบนักรบคือที่ใด?", answer: "สปาร์ตา" },
+            { question: "นครรัฐที่เน้นการพัฒนาประชาธิปไตย ปรัชญา และศิลปะคือที่ใด?", answer: "เอเธนส์" },
+            { question: "ใครคือ 'พลเมือง' (Citizens) ในนครรัฐกรีก?", answer: "ชายอิสระที่เกิดในนครรัฐนั้นๆ (ไม่รวมทาส ผู้หญิง และชาวต่างชาติ)" },
+            { question: "รูปแบบการปกครองแบบใดที่เอเธนส์ริเริ่ม?", answer: "ประชาธิปไตย (Democracy)" },
+            { question: "ใครคือบุคคลสำคัญที่ได้รับการยกย่องว่าเป็น 'บิดาแห่งประชาธิปไตย' ของเอเธนส์?", answer: "คลีสธีเนส (Cleisthenes)" },
+            { question: "ระบบการเนรเทศ (Ostracism) ของเอเธนส์คืออะไร?", answer: "การลงคะแนนเสียงเพื่อเนรเทศพลเมืองที่อาจเป็นภัยต่อประชาธิปไตยออกจากนครรัฐเป็นเวลา 10 ปี" },
+            { question: "สงครามสำคัญระหว่างกรีกกับจักรวรรดิเปอร์เซียเรียกว่าอะไร?", answer: "สงครามกรีก-เปอร์เซีย (Persian Wars)" },
+            { question: "ผลของสงครามกรีก-เปอร์เซียคืออะไร?", answer: "กรีกได้รับชัยชนะและขับไล่เปอร์เซียออกไปได้ นำไปสู่ยุคทองของเอเธนส์" },
+            { question: "สงครามระหว่างเอเธนส์และสปาร์ตาที่ทำให้นครรัฐกรีกอ่อนแอลงคือสงครามใด?", answer: "สงครามเพโลพอนนีเซียน (Peloponnesian War)" },
+            { question: "ใครคือกษัตริย์แห่งมาซิโดเนียที่รวบรวมนครรัฐกรีกเข้าด้วยกัน?", answer: "กษัตริย์ฟิลิปที่ 2 แห่งมาซิโดเนีย" },
+            { question: "นักปรัชญาชื่อดัง 3 ท่านในยุคทองของเอเธนส์คือใครบ้าง?", answer: "โสกราตีส, เพลโต, อริสโตเติล" },
+            { question: "แนวคิดสำคัญของโสกราตีสคืออะไร?", answer: '"รู้จักตนเอง" (Know Thyself) และวิธีสอนแบบโสกราตีส (Socratic Method)' },
+            { question: "มหาเทพสูงสุดของกรีกคือใคร?", answer: "ซูส (Zeus)" },
+            { question: "สถาปัตยกรรมกรีกโบราณที่มีชื่อเสียงและเป็นสัญลักษณ์ของเอเธนส์คืออะไร?", answer: "วิหารพาร์เธนอน (Parthenon)" },
+            { question: "กีฬาโอลิมปิกโบราณเริ่มต้นขึ้นเพื่อบูชาเทพองค์ใด?", answer: "ซูส" },
+            { question: "บิดาแห่งประวัติศาสตร์คือใคร?", answer: "เฮโรโดตัส (Herodotus)" },
+            { question: "มหากาพย์ที่แต่งโดยโฮเมอร์ (Homer) คือเรื่องใดบ้าง?", answer: "อีเลียด (The Iliad) และ โอดีสซีย์ (The Odyssey)" },
+            { question: "ใครคือบิดาแห่งการแพทย์ที่ปฏิเสธการอธิบายโรคด้วยเรื่องเหนือธรรมชาติ?", answer: "ฮิปโปเครติส (Hippocrates)" },
+            { question: "เสาแบบกรีกที่มีลักษณะเรียบง่าย ไม่มีลวดลายมากนักคือแบบใด?", answer: "แบบดอริก (Doric)" },
+            { question: "เสาแบบกรีกที่มีลักษณะม้วนงอคล้ายเขาแกะที่หัวเสาคือแบบใด?", answer: "แบบไอออนิก (Ionic)" },
+            { question: "เสาแบบกรีกที่มีลวดลายซับซ้อนที่สุดและตกแต่งด้วยใบอะแคนทัสคือแบบใด?", answer: "แบบคอรินเทียน (Corinthian)" },
+            { question: "เทศกาลละครที่สำคัญของกรีกจัดขึ้นเพื่อบูชาเทพองค์ใด?", answer: "เทพไดโอนิซัส (Dionysus) เทพแห่งไวน์และการละคร" },
+            { question: "ใครคือนักคณิตศาสตร์ที่ค้นพบหลักการเรขาคณิต?", answer: "ยูคลิด (Euclid)" },
+            { question: "ยุคเฮลเลนิสติก (Hellenistic Age) คือช่วงเวลาใด?", answer: "ช่วงเวลาที่วัฒนธรรมกรีกเผยแพร่ออกไปอย่างกว้างขวางหลังจากการพิชิตดินแดนของพระเจ้าอเล็กซานเดอร์มหาราช" },
+            { question: "ใครคือนักปรัชญาที่เป็นอาจารย์ของพระเจ้าอเล็กซานเดอร์มหาราช?", answer: "อริสโตเติล (Aristotle)" },
+            { question: "อ่างอาบน้ำสาธารณะและสถานที่ออกกำลังกายในนครรัฐกรีกเรียกว่าอะไร?", answer: "ยิมเนเซียม (Gymnasium)" }
+        ];
+
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        // เพิ่มตัวแปรสำหรับลำดับสุ่ม
+        let shuffledIndexes = [];
+        let currentShuffledPos = 0;
+
+        const flashcardElement = document.getElementById('flashcard');
+        const questionTextElement = document.getElementById('question-text');
+        const answerTextElement = document.getElementById('answer-text');
+        const prevBtn = document.getElementById('prev-btn');
+        const flipBtn = document.getElementById('flip-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        const statusTextElement = document.getElementById('status-text');
+
+        function shuffleIndexes() {
+            // ฟังก์ชันสุ่ม Fisher-Yates
+            shuffledIndexes = Array.from({length: flashcardsData.length}, (_, i) => i);
+            for (let i = shuffledIndexes.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledIndexes[i], shuffledIndexes[j]] = [shuffledIndexes[j], shuffledIndexes[i]];
+            }
+            currentShuffledPos = 0;
+        }
+
+        // ปรับ displayCard ให้รับ index ของ shuffledIndexes
+        function displayCard(pos) {
+            if (shuffledIndexes.length === 0) shuffleIndexes();
+            if (pos >= 0 && pos < shuffledIndexes.length) {
+                currentShuffledPos = pos;
+                const cardIndex = shuffledIndexes[currentShuffledPos];
+                questionTextElement.textContent = flashcardsData[cardIndex].question;
+                answerTextElement.textContent = flashcardsData[cardIndex].answer;
+                if (isFlipped) {
+                    flashcardElement.classList.remove('flipped');
+                    isFlipped = false;
+                }
+                updateStatusText();
+            } else {
+                console.error("ตำแหน่งการ์ดสุ่มไม่ถูกต้อง:", pos);
+            }
+        }
+
+        function flipCard() {
+            flashcardElement.classList.toggle('flipped');
+            isFlipped = !isFlipped;
+        }
+        function nextCard() {
+            currentShuffledPos = (currentShuffledPos + 1) % shuffledIndexes.length;
+            displayCard(currentShuffledPos);
+        }
+        function prevCard() {
+            currentShuffledPos = (currentShuffledPos - 1 + shuffledIndexes.length) % shuffledIndexes.length;
+            displayCard(currentShuffledPos);
+        }
+        function shuffleCards() {
+            shuffleIndexes();
+            displayCard(0);
+        }
+        function updateStatusText() {
+            statusTextElement.textContent = `การ์ดที่ ${currentShuffledPos + 1} / ${flashcardsData.length}`;
+        }
+        flipBtn.addEventListener('click', flipCard);
+        nextBtn.addEventListener('click', nextCard);
+        prevBtn.addEventListener('click', prevCard);
+        shuffleBtn.addEventListener('click', shuffleCards);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (flashcardsData.length > 0) {
+                shuffleIndexes();
+                displayCard(0);
+            } else {
+                questionTextElement.textContent = "ไม่มี Flashcard ให้แสดง";
+                answerTextElement.textContent = "โปรดเพิ่มข้อมูล Flashcard";
+                statusTextElement.textContent = "0/0";
+            }
+        });
+    </script>
+</body>
+</html>
